@@ -3,10 +3,18 @@ sudo: required
 services:
   - docker
 
-script:
+before_script:
   - docker build -t wp .
   - docker run -d -e MYSQL_ROOT_PASSWORD=Un1c0rn --name mysql mysql
   - docker run -d -e WORDPRESS_PLUGINS="jetpack;wordfence" -e WORDPRESS_ACTIVE_THEME=responsive -e WORDPRESS_THEMES="responsive" --name wp --link mysql:mysql wp
   - sleep 15
   - docker logs wp
   - docker exec wp /bin/sh -c "apt-get update && apt-get install curl -y --no-install-recommends && curl -vf localhost:80"
+
+script:
+  - docker exec wp /bin/sh -c "curl -LsS http://codeception.com/codecept.phar -o /usr/local/bin/codecept"
+  - docker exec wp /bin/sh -c "chmod a+x /usr/local/bin/codecept"
+  - docker exec wp /bin/sh -c "codecept bootstrap"
+  - docker exec wp /bin/sh -c "codecept generate:cept acceptance Welcome"
+  - docker exec wp /bin/sh -c "ls -al"
+
